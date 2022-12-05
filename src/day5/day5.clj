@@ -30,10 +30,10 @@ move 1 from 1 to 2")
 ;     [D]    
 ; [N] [C]    
 ; [Z] [M] [P]
-;  1   2   3 -> line separator (every digit at index of a letter)
-;  ^   ^   ^-> take all indicies (9) to array 3
-;  |   |->take all indexes (5) to array 2
-;  -> take all indexes (2) to array 1
+;  1   2   3 -> line separator, iterate trough it
+;  ^   ^   ^-> take all indicies (9) and push to array 3
+;  |   |->take all indexes (5) and push to array 2
+;  -> take all indexes (2) and push to array 1
 
 (defn parse-stacks [data]
   (let [index-line (find-index-line data)
@@ -63,7 +63,7 @@ move 1 from 1 to 2")
 (defn part1 [data]
   (let [stacks (parse-stacks data)
         commands (parse-commands data)])
-    ; loop on commands
+    ; iterate commands
     ; move letters in stacks
     ; take first chars from each stack
 )
