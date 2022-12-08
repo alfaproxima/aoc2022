@@ -13,27 +13,18 @@ move 3 from 1 to 3
 move 2 from 2 to 1
 move 1 from 1 to 2")
 
+(def data (slurp "src/day5/data"))
+
 (defn parse [data]
   (str/split-lines data))
-
-(defn find-index-line [data]
-  (loop [n 0 line (nth data n)]
-  (if (< n (- (count data) 1))
-    (if
-      (number?? (str/replace line #"\s" ""))
-        {:index n  :line line}
-        (recur (inc n) (nth data n))))))
-
-(defn number?? [string]
-  (boolean (re-matches #"\d+" (str string))))
 
 ;     [D]    
 ; [N] [C]    
 ; [Z] [M] [P]
 ;  1   2   3 -> line separator, iterate trough it
-;  ^   ^   ^-> take all indicies (9) and push to array 3
-;  |   |->take all indexes (5) and push to array 2
-;  -> take all indexes (2) and push to array 1
+;  ^   ^   ^-> take all indicies (9) and push to the array 3
+;  |   |->take all indexes (5) and push to the array 2
+;  -> take all indexes (2) and push to the array 1
 
 (defn parse-stacks [data]
   (let [index-line (find-index-line data)
@@ -41,13 +32,24 @@ move 1 from 1 to 2")
         stacks (take (- (index-line :index) 1) data)]
     (loop [n 0
            letter (.charAt string n)
-           result {}]
+           result []]
       (if (< n (count string))
-        (if (number?? letter)
-          (let [res (conj result {(str letter) (fill-stack stacks (- n 1))})]
+        (if (digit? letter)
+          (let [res (conj result (fill-stack stacks (- n 1)))]
             (recur (inc n) (.charAt string n) res))
           (recur (inc n) (.charAt string n) result))
         result))))
+
+(defn find-index-line [data]
+  (loop [n 0 line (nth data n)]
+  (if (< n (- (count data) 1))
+    (if
+      (digit? (str/replace line #"\s" ""))
+        {:index n  :line line}
+        (recur (inc n) (nth data n))))))
+
+(defn digit? [string]
+  (boolean (re-matches #"\d+" (str string))))
 
 (defn parse-commands [data]
   (let [start (:index (find-index-line data))
@@ -55,15 +57,56 @@ move 1 from 1 to 2")
     (->>
       commands
       (mapv #(re-seq #"\d+" %))
-      (mapv #(zipmap [:crate :from :to] %)))))
+      (mapv #(zipmap [:amount :from :to] %)))))
 
 (defn fill-stack [stacks index]
-  (mapv #(str (.charAt % index)) stacks))
+  (vec
+    (filter #(re-matches #"\w+" %)
+      (mapv #(str (.charAt % index)) stacks))))
 
-(defn part1 [data]
+(defn run-commands [data movefn]
   (let [stacks (parse-stacks data)
-        commands (parse-commands data)])
-    ; iterate commands
-    ; move letters in stacks
-    ; take first chars from each stack
-)
+        commands (parse-commands data)]
+    (loop [n 0
+           {:keys [amount from to]} (nth commands n)
+           result stacks]
+           (println (count commands))
+      (if (< n (count commands))
+          (recur 
+            (inc n)
+            (nth commands (+ n 1) [])
+            (movefn result (parse-long amount) (parse-long from) (parse-long to)))
+          result)
+)))
+
+(defn one-from-stack [stacks from to]
+  (let [crate (first (nth stacks (- from 1)))
+        upd (update stacks (- from 1) #(subvec % 1))]
+    (update upd (- to 1) #(vec (concat [crate] %)))))
+
+(defn move-crates [stacks amount from to]
+  (reduce
+    (fn [stack acc]
+      (one-from-stack stack from to))
+    stacks
+    (range amount)))
+
+(defn move-crates2 [stacks amount from to]
+  (let [crates (subvec (nth stacks (- from 1)) 0 amount)
+        upd (update stacks (- from 1) #(subvec % amount))]
+        (println crates)
+    (update upd (- to 1) #(vec (concat crates %)))))
+ 
+(defn part1 [data]
+  (str/join "" 
+      (mapv first (run-commands data move-crates))))
+
+(part1 (parse sample))
+(part1 (parse data))
+
+(defn part2 [data]
+  (str/join "" 
+      (mapv first (run-commands data move-crates2))))
+
+(part2 (parse sample))
+(part2 (parse data))
