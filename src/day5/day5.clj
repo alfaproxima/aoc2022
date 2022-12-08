@@ -70,7 +70,6 @@ move 1 from 1 to 2")
     (loop [n 0
            {:keys [amount from to]} (nth commands n)
            result stacks]
-           (println (count commands))
       (if (< n (count commands))
           (recur 
             (inc n)
@@ -94,7 +93,6 @@ move 1 from 1 to 2")
 (defn move-crates2 [stacks amount from to]
   (let [crates (subvec (nth stacks (- from 1)) 0 amount)
         upd (update stacks (- from 1) #(subvec % amount))]
-        (println crates)
     (update upd (- to 1) #(vec (concat crates %)))))
  
 (defn part1 [data]
